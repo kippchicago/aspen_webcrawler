@@ -202,4 +202,7 @@ fabric.properties
 
 credentials.py
 
-../credentials.py
+*.csv
+*.xls
+
+data
