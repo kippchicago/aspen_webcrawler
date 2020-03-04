@@ -1,5 +1,6 @@
 import pandas as pd
 from selenium import webdriver
+import numpy as np
 from selenium.webdriver.common.keys import Keys  # for necessary browser action
 from selenium.webdriver.common.by import By  # For selecting html code
 from selenium.webdriver.support.ui import Select
@@ -14,15 +15,14 @@ class StudentIdentifyingInfo:
         # Go to ASPEN Website
         url = "https://aspen.cps.edu/aspen/logon.do"
 
-        # self.browser = webdriver.Chrome('/usr/local/bin/chromedriver')
-        # self.browser = webdriver.PhantomJS()
+        self.browser = webdriver.Chrome('/usr/local/bin/chromedriver')
 
-        chrome_options = webdriver.ChromeOptions()
-        chrome_options.add_argument('headless')
+        # chrome_options = webdriver.ChromeOptions()
+        # chrome_options.add_argument('headless')
 
-        self.browser = webdriver.Chrome('/usr/local/bin/chromedriver',
-                                        chrome_options=chrome_options
-                                        )
+        # self.browser = webdriver.Chrome('/usr/local/bin/chromedriver',
+        #                                 chrome_options=chrome_options
+        #                                 )
         # navigate to the webpage
         self.browser.get(url)
 
@@ -99,15 +99,25 @@ class StudentIdentifyingInfo:
 
         self.browser.switch_to.window(window_before)
 
-    def build_report_students_tab(self):
+    def select_tab(self, top_tab_selection):
+        """
+
+        :param top_page_tab: (str) can choose one of the top tabs in the school view.
+        :return: Navigates to a tab within school view
+        """
+        time.sleep(2)
+
+        self.browser.find_element_by_id("topTabs")
+        self.browser.find_element_by_link_text(top_tab_selection.capitalize()).click()
+
+        time.sleep(2)
+
+
+    def build_quick_report_students_tab(self, selection_list):
         """
         :selection_list: (list) list of report parameters you would like to choose
         :return:
         """
-
-        # click students tab
-        self.browser.find_element_by_xpath('//*[@id="topTabs"]/tr/td[5]/a').click()
-        time.sleep(3)
 
         # click report menu
         self.browser.find_element_by_xpath('//*[@id="reportsMenu"]').click()
@@ -122,33 +132,27 @@ class StudentIdentifyingInfo:
         self.browser.find_element_by_id("wizNextButton").click()
         self.browser.find_element_by_id("wizNextButton").click()
 
-        # Choose unwanted elements in the selected field
+        # Remove all fields that are already in selected field.
+        select = Selector(text=self.browser.page_source)
+        selected_fields = select.xpath('//*[@id="selectedFieldIds"]/option//text()').extract()
+
+        selected_fields_converted = []
+        for element in selected_fields:
+            selected_fields_converted.append(element.strip())
+
         select = Select(self.browser.find_element_by_xpath('//*[@id="selectedFieldIds"]'))
 
-        select.select_by_visible_text("Name")
-        select.select_by_visible_text("Address")
-        select.select_by_visible_text("Calendar")
-        select.select_by_visible_text("Enrollment status")
-        select.select_by_visible_text("Grade level")
-        select.select_by_visible_text("Homeroom")
-        select.select_by_visible_text("Year of graduation")
-        select.select_by_visible_text("Alerts")
-        select.select_by_visible_text("Quick status")
-        select.select_by_visible_text("Alerts")
+        for element in selected_fields_converted:
+            select.select_by_visible_text(element)
 
-        # remove unwated elements in the "selected field"
         self.browser.find_element_by_id("removeButton").click()
 
-        # choose elements in the avaialbe field
+        # Choose elements and add to selected field
         select = Select(self.browser.find_element_by_xpath('//*[@id="availableFieldIds"]'))
 
+        for selection in selection_list:
+            select.select_by_visible_text(selection)
 
-
-        select.select_by_visible_text("Last name")
-        select.select_by_visible_text("First name")
-        select.select_by_visible_text("State ID")
-
-        # Add elements from available to selected field
         self.browser.find_element_by_id("addButton").click()
 
         # Hit next button three times
