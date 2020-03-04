@@ -8,19 +8,14 @@ from scrapy import Selector
 from scrapy.linkextractors import LinkExtractor
 import time
 
-def say_hi():
-    print("hi misa!")
-
-
 class StudentIdentifyingInfo:
 
     def __init__(self):
         # Go to ASPEN Website
         url = "https://aspen.cps.edu/aspen/logon.do"
 
-        self.browser = webdriver.Chrome('/usr/local/bin/chromedriver')
-        # browser = webdriver.PhantomJS()
-        # browser.get("https://python.org/")
+        # self.browser = webdriver.Chrome('/usr/local/bin/chromedriver')
+        self.browser = webdriver.PhantomJS()
 
         # navigate to the webpage
         self.browser.get(url)
@@ -100,7 +95,7 @@ class StudentIdentifyingInfo:
 
     def build_report_students_tab(self):
         """
-
+        :selection_list: (list) list of report parameters you would like to choose
         :return:
         """
 
@@ -140,6 +135,8 @@ class StudentIdentifyingInfo:
 
         # choose elements in the avaialbe field
         select = Select(self.browser.find_element_by_xpath('//*[@id="availableFieldIds"]'))
+
+
 
         select.select_by_visible_text("Last name")
         select.select_by_visible_text("First name")
