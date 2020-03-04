@@ -13,5 +13,4 @@ selection_list = ["Last name", "First name", 'Date of Birth', "State ID", "Stude
 ascend_report = ascend_students.build_quick_report_students_tab(student_group='active',
                                                                selection_list=selection_list)
 
-# Save to csv
-# bloom_report.to_csv('../data/bloom_report.csv')
+print(ascend_report)
