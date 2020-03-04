@@ -207,4 +207,23 @@ class StudentAttendance(AspenWebcrawlerCPS):
     def __init__(self):
         AspenWebcrawlerCPS.__init__(self)
 
-    
+    def pull_attendance_report(self):
+
+        # click report menu
+        self.browser.find_element_by_xpath('//*[@id="reportsMenu"]').click()
+
+        # switch windows (quick report opens up new window)
+        window_before = self.browser.window_handles[0]
+        # click Student Membership under report menu
+        self.browser.find_element_by_xpath('//*[@id="reportsMenu_Option11"]/td[2]').click()
+        window_after = self.browser.window_handles[1]
+        self.browser.switch_to.window(window_after)
+
+        time.sleep(1)
+
+        # click next button twice
+        self.browser.find_element_by_id('format').click()
+        time.sleep(1)
+        self.browser.find_element_by_xpath('//*[@id="format"]/option[2]').click()
+        self.browser.
+        self.browser.find_element_by_id('okButton').click()
