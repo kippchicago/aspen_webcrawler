@@ -8,6 +8,8 @@ import scrapy
 from scrapy import Selector
 from scrapy.linkextractors import LinkExtractor
 import time
+import html5lib
+from bs4 import BeautifulSoup
 
 class StudentIdentifyingInfo:
 
@@ -113,11 +115,25 @@ class StudentIdentifyingInfo:
         time.sleep(2)
 
 
-    def build_quick_report_students_tab(self, selection_list):
+    def build_quick_report_students_tab(self, student_group, selection_list):
         """
+        :student_group: (str) filter selection (either "active" which is All Active Students or "former" which is "Former Students"
         :selection_list: (list) list of report parameters you would like to choose
         :return:
         """
+
+        # choose either active or former students
+        self.browser.find_element_by_id("filterMenu").click()
+
+        time.sleep(3)
+
+        if student_group.lower() == "active":
+            self.browser.find_element_by_xpath('//*[@id="filterMenu_Option1"]/td[2]').click()
+        elif student_group.lower() == "former":
+            self.browser.find_element_by_xpath('//*[@id="filterMenu_Option7"]/td[2]').click()
+        else:
+            raise Exception("Not a valid selection")
+
 
         # click report menu
         self.browser.find_element_by_xpath('//*[@id="reportsMenu"]').click()
@@ -142,6 +158,9 @@ class StudentIdentifyingInfo:
 
         select = Select(self.browser.find_element_by_xpath('//*[@id="selectedFieldIds"]'))
 
+        # leave in this field
+        selected_fields_converted.remove('School > Name')
+
         for element in selected_fields_converted:
             select.select_by_visible_text(element)
 
@@ -165,33 +184,247 @@ class StudentIdentifyingInfo:
         window_final = self.browser.window_handles[1]
         self.browser.switch_to.window(window_final)
 
-        sel = Selector(text=self.browser.page_source)
+        # find table and save to html
+        self.browser.find_element_by_xpath('/html/body/table')
+        content = self.browser.page_source
 
-        # select the entire table (with all student data )
-        table = sel.xpath('/html/body/table/tbody')
+        # read in html table to pd.dataframe
+        # the zero is on the end because the function reads a list of tables by default
+        # since there is only one table we can just pick the first one
+        custom_report = pd.read_html(content, flavor='html5lib', header=0)[0]
 
-        # put all data into dictionary
-        data = []
-        for row in table.xpath('/html/body/table/tbody/tr'):
-            student_id = row.xpath('td[1]//text()').extract_first()
-            dob = row.xpath('td[2]//text()').extract_first()
-            organization_2_name = row.xpath('td[3]//text()').extract_first()
-            school_name = row.xpath('td[4]//text()').extract_first()
-            last_name = row.xpath('td[5]//text()').extract_first()
-            first_name = row.xpath('td[6]//text()').extract_first()
-            sasid = row.xpath('td[7]//text()').extract_first()
+        # sel = Selector(text=self.browser.page_source)
+        #
+        # # select the entire table (with all student data )
+        # table = sel.xpath('/html/body/table/tbody')
+        #
+        # # put all data into dictionary
+        # selection_list.insert(0, 'School > Name')
+        # count = int(len(selection_list))
+        # data = []
+        # for row in table.xpath('/html/body/table/tbody/tr'):
+        #     student_id = row.xpath('td[1]//text()').extract_first()
 
-            person = {"student_id": student_id,
-                      "dob": dob,
-                      "organization_2_name": organization_2_name,
-                      "school_name": school_name,
-                      "last_name": last_name,
-                      "first_name": first_name,
-                      "sasid": sasid}
+            # student_id = row.xpath('td[1]//text()').extract_first()
+            # dob = row.xpath('td[2]//text()').extract_first()
+            # organization_2_name = row.xpath('td[3]//text()').extract_first()
+            # school_name = row.xpath('td[4]//text()').extract_first()
+            # last_name = row.xpath('td[5]//text()').extract_first()
+            # first_name = row.xpath('td[6]//text()').extract_first()
+            # sasid = row.xpath('td[7]//text()').extract_first()
 
-            data.append(person)
-
-        # Change dictionary into dataframe
-        custom_report = pd.DataFrame(data[1:])
+        #     person = {"student_id": student_id,
+        #               "dob": dob,
+        #               "organization_2_name": organization_2_name,
+        #               "school_name": school_name,
+        #               "last_name": last_name,
+        #               "first_name": first_name,
+        #               "sasid": sasid}
+        #
+        #     data.append(person)
+        #
+        # # Change dictionary into dataframe
+        # custom_report = pd.DataFrame(data[1:])
 
         return custom_report
+
+
+# ['Photo',
+#  'Last name',
+#  'First name',
+#  'Middle name',
+#  'Title',
+#  'Suffix',
+#  'Gender',
+#  'Date of Birth',
+#  'Globally Unique Identifier',
+#  'Globally Unique Identifier 2',
+#  'Phone 1',
+#  'Globally Unique Identifier 3',
+#  'Phone 2',
+#  'Name',
+#  'Phone 3',
+#  'Address',
+#  'Primary email-Correo electrónico primario',
+#  'Student ID',
+#  'Alternate email',
+#  'State ID',
+#  'Google Docs email',
+#  'Year of graduation',
+#  'Grade level',
+#  'Contact',
+#  'Homeroom',
+#  'Student',
+#  'Next homeroom',
+#  'Staff',
+#  'Homeroom teacher',
+#  'User',
+#  'Race',
+#  'Enrollment status',
+#  'Security code',
+#  'Private',
+#  'Registration Gateway access',
+#  'Home Language',
+#  'Phone 1 Type',
+#  'Registration Gateway exported',
+#  'Calendar',
+#  'Phone 2 Type',
+#  'Phone 3 Type',
+#  'Phone 4 Type',
+#  'Phone 5 Type',
+#  'Used For Auto Notification',
+#  'Used For Auto Notification Phone 2',
+#  'Sped Status',
+#  'Used For Auto Notification Phone 3',
+#  'Used For Auto Notification Phone 4',
+#  '504 Indicator',
+#  'Used For Auto Notification Phone 5',
+#  'Location Phone 1',
+#  'Location Phone 2',
+#  'Location Phone 3',
+#  'Location Phone 4',
+#  'Location Phone 5',
+#  'Is Listed Phone 1',
+#  'Is Listed Phone 2',
+#  'Is Listed Phone 3',
+#  'Academic track type',
+#  'Is Listed Phone 4',
+#  'Medicaid number',
+#  'Is Listed Phone 5',
+#  'Alerts',
+#  'Hispanic or Latino',
+#  'Quick status',
+#  'Phone 4',
+#  'Phone 5',
+#  'BirthDate Verification',
+#  'Graduation history notes',
+#  'Citizenship Status',
+#  'Goes By Gender',
+#  'Ethnic Category',
+#  'Native Language',
+#  'Phone 1 Ext',
+#  'Phone 2 Ext',
+#  'Phone 3 Ext',
+#  'Phone 4 Ext',
+#  'Phone 5 ext',
+#  'Legal Gender',
+#  'Use Goes By or Legal First',
+#  'Use Goes By or Legal Last',
+#  'Use Goes By or Legal Gender',
+#  'Portal Email Date',
+#  'I agree',
+#  'SMS Notification Number',
+#  'HLS Locked',
+#  'Constraint Social Science',
+#  "Mother's Maiden Name",
+#  'Goes By First',
+#  'Legal Full Name',
+#  'Goes By Middle',
+#  'School Name Tag',
+#  'Goes By Last',
+#  'Email 3',
+#  'Email 4',
+#  'Legal First Name',
+#  'Service Learning Hours',
+#  'Legal Last Name',
+#  'Use Goes By or Legal Middle',
+#  'Promotion Status',
+#  'Pronouns',
+#  'Graduation Requirements Met',
+#  'Legal Middle Name',
+#  'GraduationDate',
+#  'Primary Email Lock Field',
+#  'Registration Grade Level',
+#  'Zoned School',
+#  'Deployed to Active Duty',
+#  'Military Family',
+#  'SAT Opt-In',
+#  'Religious Exemption Vision',
+#  'Religious Exemption Hearing',
+#  'Apply for Illinois Medical Card/All Kids?',
+#  'Dental Compliant',
+#  'Health Exams Compliant',
+#  'Next Zoned School',
+#  'Banned from Selective Enrollment',
+#  'Proof of Residency Provided',
+#  'Glasses Provider',
+#  'Birth Certificate on File',
+#  'Hearing Compliant',
+#  'Immunizations Compliant',
+#  'Vision Screening Compliant',
+#  'Reason for No Glasses',
+#  'Graduation Requirements Met Date',
+#  'Eligible For Graduation',
+#  'Eligible For Graduation Date',
+#  'Has Fmly Interest Health Ins',
+#  'Has Health Insurance',
+#  'CPS Insurance Option',
+#  'Additional MedicalID',
+#  'Dental Exception Reason',
+#  'Dental Waiver Reason',
+#  'Reason no hearing aid',
+#  'Student Wears Glasses',
+#  'Date Glasses Obtained',
+#  'Can Call Ambulance',
+#  'Can Call Doctor',
+#  'Can Treat Medical',
+#  'Has Medical Alert',
+#  'Vision Exam Compliant',
+#  'US Constitution Test',
+#  'Weighted Year GPA',
+#  'Year of 8th Grade Graduation',
+#  'Semester 2 Term GPA',
+#  'Constraint World Language',
+#  'Semester 1 Term GPA',
+#  'Constraint Science',
+#  'Un-Weighted GPA',
+#  'Weighted GPA',
+#  'Weighted Class Rank',
+#  'No English in Home',
+#  'IEP Indicator',
+#  'Medical Release on File',
+#  'Doctor Phone Number',
+#  'Student Does Not Speak English',
+#  'Date Registered',
+#  'Has Graduated',
+#  'Home Address in School Area',
+#  'Report Card Language',
+#  'Food Stamp Number',
+#  'Home Language Survey Date',
+#  'Glasses Required',
+#  'Years Immigrated',
+#  'Medical Number',
+#  'Year Entered 9th Grade',
+#  'Original Enrollment Date',
+#  'FRM Status',
+#  'Hearing Device Code -R',
+#  'Hearing Device Code -L',
+#  'FRM Evaluation Date',
+#  'FRM Status LY',
+#  'Meets Grade Requirement',
+#  'Meets Age Requirement',
+#  'Meets Medical Requirement',
+#  'Transfer Student',
+#  'Prior Semester Earned Credit',
+#  'Dental Compliance End Date',
+#  'Health Exams Compliance End Date',
+#  'Hearing Compliance End Date',
+#  'Immunizations Compliance End Date',
+#  'Vision Screening Compliance End Date',
+#  'Vision Exam Compliance End Date',
+#  'Religious Exemption - Health Exam',
+#  'Health Exam Waiver',
+#  'Constraint English',
+#  'Constraint Math',
+#  'SSMIdentifier',
+#  'PROJECTION_ENROLLMENT_PROGRAM',
+#  'Summer Homeroom',
+#  'Doctor Name',
+#  'Medical Alert Contact',
+#  'Dentist Name',
+#  'Dentist Phone',
+#  'School Counselor',
+#  'Diploma Type',
+#  'Home School Exception Reason Other Comment',
+#  'Next Zoned School Exception Reason',
+#  'Doctor Address']
