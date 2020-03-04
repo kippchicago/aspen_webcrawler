@@ -1,5 +1,5 @@
 import pandas as pd
-from selenium import webdriver  # open webdriver for specific browser
+from selenium import webdriver
 from selenium.webdriver.common.keys import Keys  # for necessary browser action
 from selenium.webdriver.common.by import By  # For selecting html code
 from selenium.webdriver.support.ui import Select
@@ -15,8 +15,14 @@ class StudentIdentifyingInfo:
         url = "https://aspen.cps.edu/aspen/logon.do"
 
         # self.browser = webdriver.Chrome('/usr/local/bin/chromedriver')
-        self.browser = webdriver.PhantomJS()
+        # self.browser = webdriver.PhantomJS()
 
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('headless')
+
+        self.browser = webdriver.Chrome('/usr/local/bin/chromedriver',
+                                        chrome_options=chrome_options
+                                        )
         # navigate to the webpage
         self.browser.get(url)
 
