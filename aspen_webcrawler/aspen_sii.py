@@ -23,4 +23,6 @@ ascend_attendance.select_view("school")
 ascend_attendance.select_school("ascend")
 ascend_attendance.select_tab("Student")
 
-ascend_attendance.pull_attendance_report()
+test = ascend_attendance.pull_attendance_report()
+
+test.to_csv('test.csv')

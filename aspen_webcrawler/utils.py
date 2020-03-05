@@ -1,6 +1,7 @@
 import pandas as pd
 from selenium import webdriver
 import numpy as np
+from selenium.webdriver import ActionChains
 from selenium.webdriver.common.keys import Keys  # for necessary browser action
 from selenium.webdriver.common.by import By  # For selecting html code
 from selenium.webdriver.support.ui import Select
@@ -10,6 +11,7 @@ from scrapy.linkextractors import LinkExtractor
 import time
 import html5lib
 from bs4 import BeautifulSoup
+from selenium.webdriver.common.action_chains import ActionChains
 
 class AspenWebcrawlerCPS(object):
 
@@ -35,7 +37,7 @@ class AspenWebcrawlerCPS(object):
         :param aspen_password: This is the same CPS password used to log into cps email address
         :return: will log you into aspen website
         """
-        time.sleep(2)
+        time.sleep(1)
 
         # Put in username and Password and click submit
         username = self.browser.find_element_by_name("username")
@@ -219,11 +221,19 @@ class StudentAttendance(AspenWebcrawlerCPS):
         window_after = self.browser.window_handles[1]
         self.browser.switch_to.window(window_after)
 
-        time.sleep(1)
-
-        # click next button twice
+        # click run
         self.browser.find_element_by_id('format').click()
-        time.sleep(1)
         self.browser.find_element_by_xpath('//*[@id="format"]/option[2]').click()
-        self.browser.
-        self.browser.find_element_by_id('okButton').click()
+        self.browser.find_element_by_xpath('/html/body/table/tbody/tr[2]/td/form/table/tbody/tr[5]/td/button[1]').click()
+
+        window_final = self.browser.window_handles[1]
+        self.browser.switch_to.window(window_final)
+
+        content = self.browser.page_source
+
+        # read in html table to pd.dataframe
+        custom_report = pd.read_html(content,
+                                     flavor='html5lib',
+                                     header=13)[0]
+
+        return(custom_report)
