@@ -19,15 +19,16 @@ class AspenWebcrawlerCPS(object):
         # Go to ASPEN Website
         url = "https://aspen.cps.edu/aspen/logon.do"
 
-        self.browser = webdriver.Chrome('/usr/local/bin/chromedriver')
+        # ---------REGULAR BROWSER---------------------------------
+        # self.browser = webdriver.Chrome('/usr/local/bin/chromedriver')
 
-        # chrome_options = webdriver.ChromeOptions()
-        # chrome_options.add_argument('headless')
-
-        # self.browser = webdriver.Chrome('/usr/local/bin/chromedriver',
-        #                                 chrome_options=chrome_options
-        #                                 )
-        # navigate to the webpage
+        # ---------HEADLESS BROWSER---------------------------------
+        chrome_options = webdriver.ChromeOptions()
+        chrome_options.add_argument('headless')
+        self.browser = webdriver.Chrome('/usr/local/bin/chromedriver',
+                                        chrome_options=chrome_options
+                                        )
+        # ---------navigate to website---------------------------------
         self.browser.get(url)
 
     def login_aspen_website(self, aspen_username, aspen_password):
@@ -117,24 +118,16 @@ class AspenWebcrawlerCPS(object):
 
         time.sleep(2)
 
-
-class StudentIdentifyingInfo(AspenWebcrawlerCPS):
-
-    def __init__(self):
-        AspenWebcrawlerCPS.__init__(self)
-
-
-    def build_quick_report_students_tab(self, student_group, selection_list):
+    def select_filter(self, student_group):
         """
         :student_group: (str) filter selection (either "active" which is All Active Students or "former" which is "Former Students"
-        :selection_list: (list) list of report parameters you would like to choose
         :return:
         """
 
         # choose either active or former students
         self.browser.find_element_by_id("filterMenu").click()
 
-        time.sleep(3)
+        time.sleep(1)
 
         if student_group.lower() == "active":
             self.browser.find_element_by_xpath('//*[@id="filterMenu_Option1"]/td[2]').click()
@@ -142,6 +135,19 @@ class StudentIdentifyingInfo(AspenWebcrawlerCPS):
             self.browser.find_element_by_xpath('//*[@id="filterMenu_Option7"]/td[2]').click()
         else:
             raise Exception("Not a valid selection")
+
+
+class StudentIdentifyingInfo(AspenWebcrawlerCPS):
+
+    def __init__(self):
+        AspenWebcrawlerCPS.__init__(self)
+
+
+    def build_quick_report_students_tab(self, selection_list):
+        """
+        :selection_list: (list) list of report parameters you would like to choose
+        :return:
+        """
 
 
         # click report menu
@@ -209,6 +215,22 @@ class StudentAttendance(AspenWebcrawlerCPS):
     def __init__(self):
         AspenWebcrawlerCPS.__init__(self)
 
+    def _cleanAttendance(self, attendance_file):
+
+        # Drop empty rows
+        attendance_file.dropna(subset=['Student.1'], inplace=True)
+
+        # Chose subset of columns to keep
+        attendance_file = attendance_file[
+            ['Student', 'Grade', 'Homeroom', 'Member', 'Present', 'Absent', 'Tardy', 'Dismiss']]
+
+        # filter out renments of excel pagination
+        attendance_file = attendance_file.loc[attendance_file['Student'] != "CHARTER"]
+        attendance_file = attendance_file.loc[attendance_file['Student'] != "Student"]
+        attendance_file = attendance_file.loc[~attendance_file['Student'].str.contains("Page")]
+
+        return (attendance_file)
+
     def pull_attendance_report(self):
 
         # click report menu
@@ -229,6 +251,8 @@ class StudentAttendance(AspenWebcrawlerCPS):
         window_final = self.browser.window_handles[1]
         self.browser.switch_to.window(window_final)
 
+        time.sleep(3)
+
         content = self.browser.page_source
 
         # read in html table to pd.dataframe
@@ -236,4 +260,6 @@ class StudentAttendance(AspenWebcrawlerCPS):
                                      flavor='html5lib',
                                      header=13)[0]
 
-        return(custom_report)
+        custom_report_clean = self._cleanAttendance(custom_report)
+
+        return(custom_report_clean)
