@@ -3,7 +3,7 @@
 #### -- Project Status: [Active]
 
 ## Project Intro/Objective
-Short Description 
+Downloading data from Chicago Public Schools Student Information System (Aspen) can be a confusing and time consuming project. This project automates the process of building and pulling custom reports. **Note:** This webcrawler specifically gathers data from https://aspen.cps.edu/aspen/logon.do.  
 
 ### Technologies
 * Python
@@ -11,7 +11,7 @@ Short Description
 * Scrapy 
 
 ## Project Description
-This repo contains scripts that ingest data that is stored in KIPP Chicago's database and file storage systems and transforms the datasets into a report.
+Short Description
 
 ## Getting Started
 
