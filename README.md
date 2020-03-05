@@ -16,4 +16,4 @@ This repo contains scripts that ingest data that is stored in KIPP Chicago's dat
 ## Getting Started
 
 1. Clone this repo (for help see this [tutorial](https://help.github.com/articles/cloning-a-repository/)).
-1. Details on how to use this repository are located on the repository website [here](https://kippchicago.github.io/isbe_midyear_reporting/).
+1. Details on how to use this repository are located on the repository website [here](#).
