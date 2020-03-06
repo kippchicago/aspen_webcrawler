@@ -3,7 +3,7 @@
 #### -- Project Status: [Active]
 
 ## Project Intro/Objective
-Downloading data from Chicago Public Schools Student Information System (Aspen) can be a confusing and time consuming project. This project automates the process of building and pulling custom reports. **Note:** This webcrawler specifically gathers data from https://aspen.cps.edu/aspen/logon.do.  
+Downloading data from Chicago Public Schools Student Information System (Aspen) can be both confusing and time consuming. This project automates the process of building and pulling custom reports. **Note:** This webcrawler specifically gathers data from https://aspen.cps.edu/aspen/logon.do.  
 
 ### Technologies
 * Python
