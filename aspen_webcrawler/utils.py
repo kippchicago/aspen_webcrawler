@@ -1,34 +1,36 @@
 import pandas as pd
 from selenium import webdriver
-import numpy as np
-from selenium.webdriver import ActionChains
-from selenium.webdriver.common.keys import Keys  # for necessary browser action
-from selenium.webdriver.common.by import By  # For selecting html code
+# import numpy as np
+# from selenium.webdriver import ActionChains
+# from selenium.webdriver.common.keys import Keys  # for necessary browser action
+# from selenium.webdriver.common.by import By  # For selecting html code
 from selenium.webdriver.support.ui import Select
-import scrapy
+# import scrapy
 from scrapy import Selector
-from scrapy.linkextractors import LinkExtractor
+# from scrapy.linkextractors import LinkExtractor
 import time
-import html5lib
-from bs4 import BeautifulSoup
-from selenium.webdriver.common.action_chains import ActionChains
+
+
+# import html5lib
+# from bs4 import BeautifulSoup
+# from selenium.webdriver.common.action_chains import ActionChains
 
 class AspenWebcrawlerCPS(object):
 
     def __init__(self):
-        # Go to ASPEN Website
+        # Set Website to Crawl
         url = "https://aspen.cps.edu/aspen/logon.do"
 
         # ---------REGULAR BROWSER---------------------------------
         # self.browser = webdriver.Chrome('/usr/local/bin/chromedriver')
-
+        #
         # ---------HEADLESS BROWSER---------------------------------
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument('headless')
         self.browser = webdriver.Chrome('/usr/local/bin/chromedriver',
                                         chrome_options=chrome_options
                                         )
-        # ---------navigate to website---------------------------------
+        # ---------NAVIGATE TO WEBSITE---------------------------------
         self.browser.get(url)
 
     def login_aspen_website(self, aspen_username, aspen_password):
@@ -81,7 +83,8 @@ class AspenWebcrawlerCPS(object):
         """
         window_before = self.browser.window_handles[0]
 
-        self.browser.find_element_by_xpath('//*[@id="header"]/table[1]/tbody/tr/td[3]/div/table/tbody/tr/td[2]/div/a').click()
+        self.browser.find_element_by_xpath(
+            '//*[@id="header"]/table[1]/tbody/tr/td[3]/div/table/tbody/tr/td[2]/div/a').click()
 
         window_after = self.browser.window_handles[1]
         self.browser.switch_to.window(window_after)
@@ -142,20 +145,19 @@ class StudentIdentifyingInfo(AspenWebcrawlerCPS):
     def __init__(self):
         AspenWebcrawlerCPS.__init__(self)
 
-
     def build_quick_report_students_tab(self, selection_list):
         """
+
         :selection_list: (list) list of report parameters you would like to choose
         :return:
         """
-
 
         # click report menu
         self.browser.find_element_by_xpath('//*[@id="reportsMenu"]').click()
 
         # switch windows (quick report opens up new window)
         window_before = self.browser.window_handles[0]
-        self.browser.find_element_by_xpath('//*[@id="reportsMenu_Option24"]/td[2]').click()
+        self.browser.find_element_by_xpath('/html/body/form/table/tbody/tr[2]/td/div/table[2]/tbody/tr[1]/td[2]/table[1]/tbody/tr/td[2]/div[2]/table[1]/tbody/tr[24]/td[2]').click()
         window_after = self.browser.window_handles[1]
         self.browser.switch_to.window(window_after)
 
@@ -206,7 +208,6 @@ class StudentIdentifyingInfo(AspenWebcrawlerCPS):
         # read in html table to pd.dataframe
         custom_report = pd.read_html(content, flavor='html5lib', header=0)[0]
 
-
         return custom_report
 
 
@@ -216,6 +217,11 @@ class StudentAttendance(AspenWebcrawlerCPS):
         AspenWebcrawlerCPS.__init__(self)
 
     def _cleanAttendance(self, attendance_file):
+        """
+
+        :param attendance_file:
+        :return:
+        """
 
         # Drop empty rows
         attendance_file.dropna(subset=['Student.1'], inplace=True)
@@ -227,26 +233,39 @@ class StudentAttendance(AspenWebcrawlerCPS):
         # filter out renments of excel pagination
         attendance_file = attendance_file.loc[attendance_file['Student'] != "CHARTER"]
         attendance_file = attendance_file.loc[attendance_file['Student'] != "Student"]
-        attendance_file = attendance_file.loc[~attendance_file['Student'].str.contains("Page")]
+        attendance_file = attendance_file.loc[~attendance_file['Student'].str.contains("Page [0-9]", regex=True)]
 
         return (attendance_file)
 
     def pull_attendance_report(self):
+        """
+
+        :return:
+        """
 
         # click report menu
         self.browser.find_element_by_xpath('//*[@id="reportsMenu"]').click()
 
         # switch windows (quick report opens up new window)
         window_before = self.browser.window_handles[0]
+
         # click Student Membership under report menu
         self.browser.find_element_by_xpath('//*[@id="reportsMenu_Option11"]/td[2]').click()
         window_after = self.browser.window_handles[1]
         self.browser.switch_to.window(window_after)
 
-        # click run
+        # Format: Select CSV
         self.browser.find_element_by_id('format').click()
         self.browser.find_element_by_xpath('//*[@id="format"]/option[2]').click()
-        self.browser.find_element_by_xpath('/html/body/table/tbody/tr[2]/td/form/table/tbody/tr[5]/td/button[1]').click()
+
+        # Students to include: Select all students
+        # self.browser.find_element_by_xpath('// *[ @ id = "tab_0"] / td[2] / select').click()
+        # self.browser.find_element_by_xpath('//*[@id="tab_0"]/td[2]/select/option[2]').click()
+
+
+        # click run
+        self.browser.find_element_by_xpath(
+            '/html/body/table/tbody/tr[2]/td/form/table/tbody/tr[5]/td/button[1]').click()
 
         window_final = self.browser.window_handles[1]
         self.browser.switch_to.window(window_final)
@@ -262,4 +281,4 @@ class StudentAttendance(AspenWebcrawlerCPS):
 
         custom_report_clean = self._cleanAttendance(custom_report)
 
-        return(custom_report_clean)
+        return (custom_report_clean)
