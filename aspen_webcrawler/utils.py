@@ -1,19 +1,9 @@
 import pandas as pd
-from selenium import webdriver
-# import numpy as np
-# from selenium.webdriver import ActionChains
-# from selenium.webdriver.common.keys import Keys  # for necessary browser action
-# from selenium.webdriver.common.by import By  # For selecting html code
-from selenium.webdriver.support.ui import Select
-# import scrapy
-from scrapy import Selector
-# from scrapy.linkextractors import LinkExtractor
 import time
 
-
-# import html5lib
-# from bs4 import BeautifulSoup
-# from selenium.webdriver.common.action_chains import ActionChains
+from scrapy import Selector
+from selenium import webdriver
+from selenium.webdriver.support.ui import Select
 
 class AspenWebcrawlerCPS(object):
 
@@ -42,7 +32,7 @@ class AspenWebcrawlerCPS(object):
         """
         time.sleep(1)
 
-        # Put in username and Password and click submit
+        # fill in username and Password and click submit
         username = self.browser.find_element_by_name("username")
         username.clear()
         username.send_keys(aspen_username)
@@ -50,6 +40,7 @@ class AspenWebcrawlerCPS(object):
         password = self.browser.find_element_by_name("password")
         password.clear()
         password.send_keys(aspen_password)
+
         self.browser.find_element_by_id("logonButton").click()
 
         time.sleep(2)
@@ -61,7 +52,6 @@ class AspenWebcrawlerCPS(object):
         :return: will navigate to chosen view in aspen.
         """
         # Selects view button
-
         self.browser.find_element_by_id("contextMenu").click()
 
         if view.lower() == "school":
@@ -123,7 +113,7 @@ class AspenWebcrawlerCPS(object):
 
     def select_filter(self, student_group):
         """
-        :student_group: (str) filter selection (either "active" which is All Active Students or "former" which is "Former Students"
+        :student_group: (str) filter selection (either "active" which is "All Active Students" or "former" which is "Former Students"
         :return:
         """
 
@@ -157,7 +147,10 @@ class StudentIdentifyingInfo(AspenWebcrawlerCPS):
 
         # switch windows (quick report opens up new window)
         window_before = self.browser.window_handles[0]
-        self.browser.find_element_by_xpath('/html/body/form/table/tbody/tr[2]/td/div/table[2]/tbody/tr[1]/td[2]/table[1]/tbody/tr/td[2]/div[2]/table[1]/tbody/tr[24]/td[2]').click()
+
+        # select "quick report"
+        self.browser.find_element_by_xpath(
+            '/html/body/form/table/tbody/tr[2]/td/div/table[2]/tbody/tr[1]/td[2]/table[1]/tbody/tr/td[2]/div[2]/table[1]/tbody/tr[24]/td[2]').click()
         window_after = self.browser.window_handles[1]
         self.browser.switch_to.window(window_after)
 
@@ -169,13 +162,15 @@ class StudentIdentifyingInfo(AspenWebcrawlerCPS):
         select = Selector(text=self.browser.page_source)
         selected_fields = select.xpath('//*[@id="selectedFieldIds"]/option//text()').extract()
 
+        # collect list of all fields in "Selected Fields"
         selected_fields_converted = []
         for element in selected_fields:
             selected_fields_converted.append(element.strip())
 
         select = Select(self.browser.find_element_by_xpath('//*[@id="selectedFieldIds"]'))
 
-        # leave in this field
+        # Remove element from list that you would like to leave in selected field
+        # NOTE: This is done because 'School > Name' does not appear in available field if removed
         selected_fields_converted.remove('School > Name')
 
         for element in selected_fields_converted:
