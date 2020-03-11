@@ -208,5 +208,6 @@ credentials.py
 *.xls
 
 data
-
+conf
+secrets
 webpage.html

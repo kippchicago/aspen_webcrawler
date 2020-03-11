@@ -3,8 +3,8 @@ import credentials
 
 student_info = StudentIdentifyingInfo()
 
-student_info.login_aspen_website(credentials.ASPEN_USERNAME,
-                                      credentials.ASPEN_PASSWORD)
+student_info.login_aspen_website(secrets.ASPEN_USERNAME,
+                                 secrets.ASPEN_PASSWORD)
 
 student_info.select_view('school')
 student_info.select_school('ascend')
